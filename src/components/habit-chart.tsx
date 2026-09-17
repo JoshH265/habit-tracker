@@ -60,8 +60,8 @@ function ChartTooltip({
 }
 
 export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
-  const numberFields = fieldDefinitions.filter((f) => f.type === "number");
-  const ratingFields = fieldDefinitions.filter((f) => f.type === "rating");
+  const lineFields = fieldDefinitions.filter((f) => f.type === "number");
+  const barFields = fieldDefinitions.filter((f) => f.type === "rating");
 
   return (
     <div className="h-80 w-full text-zinc-500 dark:text-zinc-400">
@@ -71,28 +71,7 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
           margin={{ top: 16, right: 12, left: 0, bottom: 0 }}
         >
           <defs>
-            {numberFields.map((f, i) => (
-              <linearGradient
-                key={f.key}
-                id={`bar-grad-${f.key}`}
-                x1="0"
-                y1="0"
-                x2="0"
-                y2="1"
-              >
-                <stop
-                  offset="0%"
-                  stopColor={NUMBER_COLORS[i % NUMBER_COLORS.length]}
-                  stopOpacity={1}
-                />
-                <stop
-                  offset="100%"
-                  stopColor={NUMBER_COLORS[i % NUMBER_COLORS.length]}
-                  stopOpacity={0.55}
-                />
-              </linearGradient>
-            ))}
-{ratingFields.map((f, i) => (
+            {lineFields.map((f, i) => (
               <linearGradient
                 key={f.key}
                 id={`area-grad-${f.key}`}
@@ -103,13 +82,34 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
               >
                 <stop
                   offset="0%"
+                  stopColor={NUMBER_COLORS[i % NUMBER_COLORS.length]}
+                  stopOpacity={0.18}
+                />
+                <stop
+                  offset="100%"
+                  stopColor={NUMBER_COLORS[i % NUMBER_COLORS.length]}
+                  stopOpacity={0}
+                />
+              </linearGradient>
+            ))}
+            {barFields.map((f, i) => (
+              <linearGradient
+                key={f.key}
+                id={`bar-grad-${f.key}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop
+                  offset="0%"
                   stopColor={RATING_COLORS[i % RATING_COLORS.length]}
-                  stopOpacity={0.35}
+                  stopOpacity={1}
                 />
                 <stop
                   offset="100%"
                   stopColor={RATING_COLORS[i % RATING_COLORS.length]}
-                  stopOpacity={0}
+                  stopOpacity={0.55}
                 />
               </linearGradient>
             ))}
@@ -134,7 +134,7 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
             tickLine={false}
             axisLine={false}
           />
-          {ratingFields.length > 0 && (
+          {barFields.length > 0 && (
             <YAxis
               yAxisId="rating"
               orientation="right"
@@ -157,10 +157,10 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
             wrapperStyle={{ fontSize: 12, paddingTop: 8 }}
           />
 
-          {ratingFields.map((f) => (
+          {lineFields.map((f) => (
             <Area
               key={f.key}
-              yAxisId="rating"
+              yAxisId="number"
               dataKey={f.key}
               stroke="none"
               fill={`url(#area-grad-${f.key})`}
@@ -169,10 +169,10 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
             />
           ))}
 
-          {numberFields.map((f) => (
+          {barFields.map((f) => (
             <Bar
               key={f.key}
-              yAxisId="number"
+              yAxisId="rating"
               dataKey={f.key}
               name={f.label}
               fill={`url(#bar-grad-${f.key})`}
@@ -180,15 +180,20 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
               maxBarSize={22}
             />
           ))}
-          {ratingFields.map((f, i) => (
+
+          {lineFields.map((f, i) => (
             <Line
               key={f.key}
-              yAxisId="rating"
+              yAxisId="number"
               dataKey={f.key}
               name={f.label}
-              stroke={RATING_COLORS[i % RATING_COLORS.length]}
+              stroke={NUMBER_COLORS[i % NUMBER_COLORS.length]}
               strokeWidth={2.5}
-              dot={{ r: 3, strokeWidth: 0, fill: RATING_COLORS[i % RATING_COLORS.length] }}
+              dot={{
+                r: 3,
+                strokeWidth: 0,
+                fill: NUMBER_COLORS[i % NUMBER_COLORS.length],
+              }}
               activeDot={{ r: 5 }}
             />
           ))}
