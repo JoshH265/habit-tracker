@@ -7,6 +7,7 @@ export interface FieldDefinition {
   min?: number;
   max?: number;
   step?: number;
+  unit?: string;
 }
 
 export interface Habit {
@@ -22,6 +23,7 @@ export interface Entry {
   date: string;
   values: Record<string, number | string>;
   notes: string | null;
+  done: boolean;
   created_at: Date;
   updated_at: Date;
 }

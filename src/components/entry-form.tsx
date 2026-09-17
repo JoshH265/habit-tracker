@@ -280,6 +280,7 @@ export function EntryForm({
                           <label key={def.key} className="block">
                             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
                               {def.label}
+                              {def.unit ? ` (${def.unit})` : ""}
                             </span>
                             <input
                               type="number"

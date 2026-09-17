@@ -37,7 +37,7 @@ export async function listEntriesForMonth(
   end: string
 ): Promise<Entry[]> {
   const { rows } = await getPool().query<Entry>(
-    `SELECT id, habit_id, date::text AS date, values, notes, created_at, updated_at
+    `SELECT id, habit_id, date::text AS date, values, notes, done, created_at, updated_at
      FROM entries
      WHERE habit_id = $1 AND date >= $2 AND date < $3
      ORDER BY date`,
@@ -72,4 +72,30 @@ export async function deleteEntry(
     habitId,
     date,
   ]);
+}
+
+export async function toggleEntryDone(
+  habitId: string,
+  date: string
+): Promise<boolean> {
+  const { rows } = await getPool().query<{ done: boolean }>(
+    `INSERT INTO entries (habit_id, date, values, notes, done)
+     VALUES ($1, $2, '{}'::jsonb, NULL, true)
+     ON CONFLICT (habit_id, date)
+     DO UPDATE SET done = NOT entries.done, updated_at = now()
+     RETURNING done`,
+    [habitId, date]
+  );
+  const done = rows[0]?.done ?? false;
+
+  // Toggled off: drop the row if it holds no real data.
+  if (!done) {
+    await getPool().query(
+      `DELETE FROM entries
+       WHERE habit_id = $1 AND date = $2
+         AND values = '{}'::jsonb AND notes IS NULL`,
+      [habitId, date]
+    );
+  }
+  return done;
 }

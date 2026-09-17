@@ -1,7 +1,12 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { deleteEntry, getHabitById, upsertEntry } from "@/lib/queries";
+import {
+  deleteEntry,
+  getHabitById,
+  toggleEntryDone,
+  upsertEntry,
+} from "@/lib/queries";
 
 export async function saveEntry(formData: FormData) {
   const habitId = String(formData.get("habitId") ?? "");
@@ -47,6 +52,23 @@ export async function saveEntry(formData: FormData) {
   if (!hasData) return;
 
   await upsertEntry({ habitId, date, values, notes });
+  revalidatePath(`/habits/${slug}`);
+}
+
+export async function toggleDone(formData: FormData) {
+  const habitId = String(formData.get("habitId") ?? "");
+  const slug = String(formData.get("slug") ?? "");
+  const date = String(formData.get("date") ?? "");
+
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    throw new Error("Invalid date");
+  }
+
+  const habit = await getHabitById(habitId);
+  if (!habit) throw new Error("Habit not found");
+
+  await toggleEntryDone(habitId, date);
+  revalidatePath("/");
   revalidatePath(`/habits/${slug}`);
 }
 
