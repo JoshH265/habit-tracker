@@ -44,9 +44,11 @@ export function HabitSection({
   };
 
   const entriesCountLabel = habit.slug === "sleep" ? "Nights logged" : "Days logged";
+  const tickedCount = entries.filter((e) => e.done).length;
 
   const statTiles: StatTile[] = [
     { label: entriesCountLabel, value: String(entries.length), hint: "this month" },
+    { label: "Ticks", value: String(tickedCount), hint: "days ticked" },
     ...numberFields.map((f) => ({
       label: `Avg ${f.label.toLowerCase()}`,
       value: formatAvg(averageOf(f.key)),

@@ -10,6 +10,8 @@ charts of your data. Built with Next.js 16, Postgres 17, and Docker.
 - **`pg`** driver with raw SQL (schema + seed live in `docker/init.sql`)
 - **Recharts** for the dual-axis charts (number fields as lines, rating fields
   as bars)
+- **Vitest** for unit + database integration tests, **Puppeteer** for the
+  end-to-end smoke test
 
 ## Quick start (development)
 
@@ -29,16 +31,50 @@ The first time the `db` container starts, `docker/init.sql` creates the tables
 and seeds the Sleep and Weight habits. To wipe and reseed, remove the volume:
 `docker compose down -v` then `docker compose up -d db`.
 
-## Run the full containerized app (production mode)
+## Tests
 
-Builds the app image (multi-stage `Dockerfile` → standalone output) and runs
-app + database together, both in Docker.
+```bash
+npm test          # unit + database integration tests (Vitest)
+npm run test:watch
+npm run test:e2e  # boots the app and drives it with headless Chromium
+```
+
+- Unit tests cover the pure helpers in `src/lib/month.ts` and `src/lib/fields.ts`.
+- Integration tests run against a throwaway `habit_tracker_test` database that
+  is dropped and recreated on every run — your data is never touched.
+- The e2e smoke test works in a far-future month and cleans up after itself.
+  Set `CHROME_PATH` if Chromium is not at `/usr/bin/chromium`.
+
+## Deployment
+
+The production image is a multi-stage `Dockerfile` producing Next's standalone
+output. Compose runs the app and the database together:
 
 ```bash
 docker compose up --build
 ```
 
-Open http://localhost:3000.
+| Variable   | Default | Purpose                                  |
+| ---------- | ------- | ---------------------------------------- |
+| `APP_PORT` | `3000`  | Host port for the app                    |
+| `DB_PORT`  | `5432`  | Host port for Postgres                   |
+
+```bash
+APP_PORT=8080 docker compose up --build
+```
+
+Both services have health checks, so `docker compose ps` shows `healthy` once
+the stack is up. Database data lives in the `db-data` volume.
+
+Backup and restore:
+
+```bash
+# backup
+docker compose exec db pg_dump -U habit habit_tracker > backup.sql
+
+# restore
+docker compose exec -T db psql -U habit habit_tracker < backup.sql
+```
 
 ## Configuration
 
@@ -55,7 +91,20 @@ talks to the `db` service over the compose network.
 - `entries` — one row per habit/day (`values` JSON, notes, `done`), unique on
   `(habit_id, date)`, so saving a day upserts instead of duplicating.
 - `done` — a standalone per-day tick used by the daily checklist, independent
-  of the logged values.
+  of the logged values. Unticking a day that has values keeps the values.
 - The dashboard (`/`) shows every habit (stat tiles, chart, calendar) plus a
   combined daily checklist across habits; `/habits/[slug]` shows one habit in
   detail.
+- Both views read the same rows, so a value logged in a habit's calendar shows
+  up in the checklist, and a tick made in the checklist is visible as a ring on
+  the habit's calendar.
+
+### Adding a habit
+
+```sql
+INSERT INTO habits (name, slug, field_definitions) VALUES
+  ('Water', 'water', '[{"key": "glasses", "label": "Glasses", "type": "number", "min": 0, "max": 20, "step": 1, "unit": "glasses"}]');
+```
+
+The habit appears on the dashboard immediately — no code changes. Field types
+are `number` (rendered as a line), `rating` (rendered as bars) and `text`.

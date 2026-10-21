@@ -53,6 +53,12 @@ export function EntryForm({
     return map;
   }, [entries]);
 
+  const doneDates = useMemo(() => {
+    const set = new Set<string>();
+    for (const entry of entries) if (entry.done) set.add(entry.date);
+    return set;
+  }, [entries]);
+
   const calendarRef = useRef<HTMLDivElement>(null);
 
   const [activeDate, setActiveDate] = useState<string | null>(null);
@@ -151,6 +157,7 @@ export function EntryForm({
         {days.map((date) => {
           const dayEntry = entriesByDate.get(date);
           const isActive = date === activeDate;
+          const isDone = doneDates.has(date);
           const dayNumber = Number(date.slice(-2));
           const dayClasses = isActive
             ? "bg-indigo-600 font-semibold text-white shadow-sm"
@@ -164,7 +171,16 @@ export function EntryForm({
                 type="button"
                 onClick={() => openDay(date)}
                 aria-pressed={isActive}
-                className={`flex h-9 w-9 items-center justify-center rounded-full text-base leading-none transition ${dayClasses}`}
+                aria-label={`${dayNumber}${dayEntry ? ", has data" : ""}${
+                  isDone ? ", ticked" : ""
+                }`}
+                className={`relative flex h-9 w-9 items-center justify-center rounded-full text-base leading-none transition ${dayClasses} ${
+                  isDone && !isActive
+                    ? "ring-2 ring-emerald-500/70"
+                    : isDone
+                      ? "ring-2 ring-emerald-400/80"
+                      : ""
+                }`}
               >
                 {dayNumber}
                 {dayEntry && (

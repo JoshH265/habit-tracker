@@ -23,3 +23,24 @@ export function ratingOptions(def: FieldDefinition): number[] {
 export function fieldLabel(def: FieldDefinition): string {
   return def.unit ? `${def.label} (${def.unit})` : def.label;
 }
+
+export function formatValue(
+  value: number | string,
+  def: FieldDefinition
+): string {
+  if (typeof value === "number") {
+    const rounded = Number.isInteger(value) ? String(value) : value.toFixed(1);
+    return def.unit ? `${rounded} ${def.unit}` : rounded;
+  }
+  return value;
+}
+
+export function formatValues(
+  values: Record<string, number | string>,
+  fieldDefinitions: FieldDefinition[]
+): string {
+  return fieldDefinitions
+    .filter((def) => values[def.key] !== undefined && values[def.key] !== "")
+    .map((def) => formatValue(values[def.key], def))
+    .join(" · ");
+}

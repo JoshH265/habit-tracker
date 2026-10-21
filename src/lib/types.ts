@@ -27,3 +27,8 @@ export interface Entry {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface DayCell {
+  done: boolean;
+  values: Record<string, number | string>;
+}

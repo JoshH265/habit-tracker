@@ -10,6 +10,7 @@ import {
   shiftMonth,
 } from "@/lib/month";
 import { listEntriesForMonth, listHabits } from "@/lib/queries";
+import type { DayCell } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -38,11 +39,13 @@ export default async function DashboardPage({
     }))
   );
 
-  const doneByHabit: Record<string, string[]> = {};
+  const cells: Record<string, Record<string, DayCell>> = {};
   for (const section of sections) {
-    doneByHabit[section.habit.id] = section.entries
-      .filter((e) => e.done)
-      .map((e) => e.date);
+    const byDate: Record<string, DayCell> = {};
+    for (const entry of section.entries) {
+      byDate[entry.date] = { done: entry.done, values: entry.values };
+    }
+    cells[section.habit.id] = byDate;
   }
 
   const prev = shiftMonth(month, -1);
@@ -101,9 +104,10 @@ export default async function DashboardPage({
                   id: h.id,
                   slug: h.slug,
                   name: h.name,
+                  fieldDefinitions: h.field_definitions,
                 }))}
                 days={days}
-                doneByHabit={doneByHabit}
+                cells={cells}
               />
             </div>
           </section>

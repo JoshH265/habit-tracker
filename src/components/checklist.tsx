@@ -2,17 +2,20 @@
 
 import { useTransition } from "react";
 import { toggleDone } from "@/app/actions";
+import { formatValues } from "@/lib/fields";
+import type { DayCell, FieldDefinition } from "@/lib/types";
 
 interface ChecklistHabit {
   id: string;
   slug: string;
   name: string;
+  fieldDefinitions: FieldDefinition[];
 }
 
 interface ChecklistProps {
   habits: ChecklistHabit[];
   days: string[];
-  doneByHabit: Record<string, string[]>;
+  cells: Record<string, Record<string, DayCell>>;
 }
 
 function weekdayShort(date: string): string {
@@ -28,7 +31,7 @@ function todayISO(): string {
   return new Date(now.getTime() - offset).toISOString().slice(0, 10);
 }
 
-export function Checklist({ habits, days, doneByHabit }: ChecklistProps) {
+export function Checklist({ habits, days, cells }: ChecklistProps) {
   const [isPending, startTransition] = useTransition();
   const today = todayISO();
 
@@ -70,7 +73,9 @@ export function Checklist({ habits, days, doneByHabit }: ChecklistProps) {
               >
                 <td
                   className={`border border-zinc-200 px-2 py-1.5 dark:border-zinc-800 ${
-                    isToday ? "font-semibold text-indigo-600 dark:text-indigo-400" : "text-zinc-600 dark:text-zinc-300"
+                    isToday
+                      ? "font-semibold text-indigo-600 dark:text-indigo-400"
+                      : "text-zinc-600 dark:text-zinc-300"
                   }`}
                 >
                   <span className="tabular-nums">{Number(date.slice(-2))}</span>
@@ -79,26 +84,37 @@ export function Checklist({ habits, days, doneByHabit }: ChecklistProps) {
                   </span>
                 </td>
                 {habits.map((habit) => {
-                  const done = doneByHabit[habit.id]?.includes(date) ?? false;
+                  const cell = cells[habit.id]?.[date];
+                  const done = cell?.done ?? false;
+                  const summary = cell
+                    ? formatValues(cell.values, habit.fieldDefinitions)
+                    : "";
                   return (
                     <td
                       key={habit.id}
-                      className="border border-zinc-200 p-0 text-center dark:border-zinc-800"
+                      className="border border-zinc-200 px-2 py-1 dark:border-zinc-800"
                     >
-                      <button
-                        type="button"
-                        aria-pressed={done}
-                        aria-label={`${habit.name} ${date}`}
-                        disabled={isPending}
-                        onClick={() => toggle(habit, date)}
-                        className={`flex h-9 w-full items-center justify-center text-lg transition disabled:opacity-50 ${
-                          done
-                            ? "text-indigo-600 dark:text-indigo-400"
-                            : "text-zinc-300 hover:bg-zinc-50 dark:text-zinc-700 dark:hover:bg-zinc-800/50"
-                        }`}
-                      >
-                        {done && <span aria-hidden="true">✓</span>}
-                      </button>
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          type="button"
+                          aria-pressed={done}
+                          aria-label={`${habit.name} ${date}${
+                            done ? ", ticked" : ""
+                          }`}
+                          disabled={isPending}
+                          onClick={() => toggle(habit, date)}
+                          className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-sm transition disabled:opacity-50 ${
+                            done
+                              ? "bg-indigo-600 text-white"
+                              : "text-zinc-300 hover:bg-zinc-100 dark:text-zinc-700 dark:hover:bg-zinc-800"
+                          }`}
+                        >
+                          {done ? <span aria-hidden="true">✓</span> : null}
+                        </button>
+                        <span className="truncate text-xs text-zinc-400 tabular-nums">
+                          {summary}
+                        </span>
+                      </div>
                     </td>
                   );
                 })}
