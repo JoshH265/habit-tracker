@@ -15,7 +15,7 @@ import { setTimeout as sleep } from "node:timers/promises";
 import puppeteer from "puppeteer-core";
 
 const PORT = Number(process.env.SMOKE_PORT ?? 3123);
-const BASE = `http://localhost:${PORT}`;
+const BASE = `http://127.0.0.1:${PORT}`;
 const MONTH = "2031-07";
 const CHROME = process.env.CHROME_PATH ?? "/usr/bin/chromium";
 
@@ -42,7 +42,7 @@ async function waitForServer(url, timeoutMs = 90_000) {
 async function main() {
   const server = spawn(
     "npx",
-    ["next", "dev", "-p", String(PORT)],
+    ["next", "dev", "-p", String(PORT), "--hostname", "127.0.0.1"],
     {
       stdio: ["ignore", "pipe", "pipe"],
       detached: true,

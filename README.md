@@ -81,7 +81,33 @@ docker compose exec -T db psql -U habit habit_tracker < backup.sql
 `DATABASE_URL` lives in `.env` for local development
 (`postgres://habit:habit@localhost:5432/habit_tracker`). Inside Docker Compose
 it is overridden to `postgres://habit:habit@db:5432/habit_tracker` so the app
-talks to the `db` service over the compose network.
+talks to the `db` service over the compose network. See `.env.example` for
+every supported variable.
+
+## Security
+
+**The app has no authentication.** Anyone who can reach it can read and change
+every entry. It is therefore bound to localhost by default:
+
+| Service        | Default binding   | LAN-reachable? |
+| -------------- | ----------------- | -------------- |
+| App (compose)  | `127.0.0.1:3000`  | No             |
+| Postgres       | `127.0.0.1:5432`  | No             |
+| Dev server     | `127.0.0.1:3000`  | No             |
+
+- `npm run dev` binds to localhost. `npm run dev:lan` binds to `0.0.0.0` — only
+  use it on a network you trust.
+- `APP_BIND=0.0.0.0` / `DB_BIND=0.0.0.0` do the same for Docker Compose.
+- `DB_PASSWORD` sets the Postgres password (default `habit`). It only takes
+  effect when the database volume is first created; to change it on an
+  existing volume run
+  `docker compose exec db psql -U habit -d habit_tracker -c "ALTER USER habit WITH PASSWORD 'new-password'"`
+  and set the same value in `DB_PASSWORD`.
+- Before deploying anywhere public, put authentication in front of the app
+  (or keep it on a private network). Nothing in the repository contains
+  secrets: `.env` is git-ignored, and the only credentials in the repo are the
+  local development placeholders.
+
 
 ## Design
 
