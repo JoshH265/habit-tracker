@@ -13,6 +13,7 @@ import {
   YAxis,
 } from "recharts";
 import type { FieldDefinition } from "@/lib/types";
+import { ratingRange } from "@/lib/fields";
 
 interface HabitChartProps {
   data: Array<Record<string, number | string>>;
@@ -139,7 +140,14 @@ export function HabitChart({ data, fieldDefinitions }: HabitChartProps) {
               yAxisId="rating"
               orientation="right"
               width={34}
-              domain={[0, (dataMax: number) => Math.max(10, Math.ceil(dataMax) + 1)]}
+              domain={[
+                0,
+                (dataMax: number) =>
+                  Math.max(
+                    ...barFields.map((f) => ratingRange(f).max),
+                    Math.ceil(dataMax) + 1
+                  ),
+              ]}
               tick={{ fontSize: 12 }}
               stroke="currentColor"
               tickLine={false}

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ratingRange } from "@/lib/fields";
 import { formatAvg, monthLabel } from "@/lib/month";
 import type { Entry, Habit } from "@/lib/types";
 import { EntryForm } from "./entry-form";
@@ -10,6 +11,8 @@ interface HabitSectionProps {
   entries: Entry[];
   days: string[];
   leadingBlanks: number;
+  showDetailsLink?: boolean;
+  showMonthLabel?: boolean;
 }
 
 interface StatTile {
@@ -24,6 +27,8 @@ export function HabitSection({
   entries,
   days,
   leadingBlanks,
+  showDetailsLink = true,
+  showMonthLabel = true,
 }: HabitSectionProps) {
   const numberFields = habit.field_definitions.filter(
     (f) => f.type === "number"
@@ -50,7 +55,7 @@ export function HabitSection({
     ...ratingFields.map((f) => ({
       label: `Avg ${f.label.toLowerCase()}`,
       value: formatAvg(averageOf(f.key)),
-      hint: `${f.min ?? 1}–${f.max ?? 10} scale`,
+      hint: `${ratingRange(f).min}–${ratingRange(f).max} scale`,
     })),
   ];
 
@@ -60,14 +65,18 @@ export function HabitSection({
     <section className="rounded-2xl border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
       <div className="flex items-baseline justify-between">
         <h2 className="text-xl font-semibold tracking-tight">{habit.name}</h2>
-        <Link
-          href={`/habits/${habit.slug}?month=${month}`}
-          className="text-sm text-zinc-500 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100"
-        >
-          Details &rarr;
-        </Link>
+        {showDetailsLink && (
+          <Link
+            href={`/habits/${habit.slug}?month=${month}`}
+            className="text-sm text-zinc-500 hover:text-zinc-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100"
+          >
+            Details &rarr;
+          </Link>
+        )}
       </div>
-      <p className="mt-0.5 text-xs text-zinc-400">{monthLabel(month)}</p>
+      {showMonthLabel && (
+        <p className="mt-0.5 text-xs text-zinc-400">{monthLabel(month)}</p>
+      )}
 
       <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {statTiles.map((tile) => (

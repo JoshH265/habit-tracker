@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import type { FormEvent } from "react";
 import { saveEntry, removeEntry } from "@/app/actions";
+import { fieldLabel, ratingOptions } from "@/lib/fields";
 import type { Entry, FieldDefinition } from "@/lib/types";
 
 interface EntryFormProps {
@@ -246,14 +247,7 @@ export function EntryForm({
                         }
 
                         if (def.type === "rating") {
-                          const options: number[] = [];
-                          for (
-                            let i = def.min ?? 1;
-                            i <= (def.max ?? 5);
-                            i += 1
-                          ) {
-                            options.push(i);
-                          }
+                          const options = ratingOptions(def);
                           return (
                             <label key={def.key} className="block">
                               <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -279,8 +273,7 @@ export function EntryForm({
                         return (
                           <label key={def.key} className="block">
                             <span className="text-xs font-medium text-zinc-500 dark:text-zinc-400">
-                              {def.label}
-                              {def.unit ? ` (${def.unit})` : ""}
+                              {fieldLabel(def)}
                             </span>
                             <input
                               type="number"
@@ -327,7 +320,6 @@ export function EntryForm({
                           <button
                             type="submit"
                             data-action="delete"
-                            formAction={removeEntry}
                             disabled={isPending}
                             className="rounded-lg border border-red-300 px-3 py-2 text-sm font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60 dark:border-red-900 dark:text-red-400 dark:hover:bg-red-950"
                           >

@@ -1,5 +1,4 @@
 import "server-only";
-import "dotenv/config";
 import { Pool } from "pg";
 
 const globalForDb = globalThis as unknown as { __habitPool?: Pool };

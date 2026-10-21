@@ -1,14 +1,15 @@
 # Habit Tracker
 
-Track habits (starting with Sleep), log daily entries, and view a chart of
-your data. Built with Next.js 16, Postgres 17, and Docker.
+Track habits (Sleep and Weight), log daily entries, tick off days, and view
+charts of your data. Built with Next.js 16, Postgres 17, and Docker.
 
 ## Stack
 
 - **Next.js 16** (App Router, TypeScript, Tailwind CSS)
 - **Postgres 17** running in Docker (`docker-compose.yml`)
 - **`pg`** driver with raw SQL (schema + seed live in `docker/init.sql`)
-- **Recharts** for the dual-axis bar (hours) + line (quality) chart
+- **Recharts** for the dual-axis charts (number fields as lines, rating fields
+  as bars)
 
 ## Quick start (development)
 
@@ -22,10 +23,10 @@ docker compose up -d db
 npm run dev
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000 (use `npm run dev -- -p 3001` if 3000 is taken).
 
 The first time the `db` container starts, `docker/init.sql` creates the tables
-and seeds the Sleep habit. To wipe and reseed, remove the volume:
+and seeds the Sleep and Weight habits. To wipe and reseed, remove the volume:
 `docker compose down -v` then `docker compose up -d db`.
 
 ## Run the full containerized app (production mode)
@@ -49,6 +50,12 @@ talks to the `db` service over the compose network.
 ## Design
 
 - `habits` — each habit defines its fields as JSON (`field_definitions`), e.g.
-  Sleep = hours (number) + quality (rating 1–5). Future habits just add a row.
-- `entries` — one row per habit/day (`values` JSON, notes), unique on
+  Sleep = hours (number) + quality (rating 1–10), Weight = weight (number, kg).
+  Future habits just add a row.
+- `entries` — one row per habit/day (`values` JSON, notes, `done`), unique on
   `(habit_id, date)`, so saving a day upserts instead of duplicating.
+- `done` — a standalone per-day tick used by the daily checklist, independent
+  of the logged values.
+- The dashboard (`/`) shows every habit (stat tiles, chart, calendar) plus a
+  combined daily checklist across habits; `/habits/[slug]` shows one habit in
+  detail.

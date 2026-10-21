@@ -40,3 +40,14 @@ export function leadingBlanksFor(month: string): number {
   const [y, m] = month.split("-").map(Number);
   return (new Date(Date.UTC(y, m - 1, 1)).getUTCDay() + 6) % 7;
 }
+
+export function isValidISODate(value: string): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  const [y, m, d] = value.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d));
+  return (
+    date.getUTCFullYear() === y &&
+    date.getUTCMonth() === m - 1 &&
+    date.getUTCDate() === d
+  );
+}
